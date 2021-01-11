@@ -2,6 +2,21 @@
 local M = {}
 local api = vim.api
 
+local default_emoji="🐛"
+
+local user_emoji=api.nvim_get_var('blamer_emoji')
+
+local used_emoji
+
+-- check if the user has set an emoji and use it for the default log
+if user_emoji then
+  used_emoji = user_emoji
+else
+  used_emoji = default_emoji
+end
+
+local default_log_format=used_emoji.." %an | %ar | %s"
+
 -- skip scratch buffer or unkown filetype, nvim's terminal window, and other known filetypes need to bypass
 local bypass_ft = {'', 'bin', '.', 'vim-plug', 'LuaTree', 'startify', 'nerdtree'}
 
@@ -21,7 +36,7 @@ function M.blameVirtText()
   local line = api.nvim_win_get_cursor(0)
   local blame = vim.fn.system(string.format('git blame -c -L %d,%d %s', line[1], line[1], currFile))
   local hash = vim.split(blame, '%s')[1]
-  local cmd = string.format("git show %s ", hash).."--format='🐛 %an | %ar | %s'"
+  local cmd = string.format("git show %s ", hash)..string.format("--format='%s'", default_log_format);
   if hash == '00000000' then
     text = 'Not Committed Yet'
   else
